@@ -1,3 +1,9 @@
+
+---
+
+### 🔧 Обновлённый `.github/workflows/generate-raw-links.yml`
+
+```yaml
 name: Generate Raw Links
 
 on:
@@ -12,7 +18,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Generate README with raw links
+    - name: Generate README with raw links and curl commands
       run: |
         echo "# Raw File Links" > README.md
         echo "" >> README.md
@@ -23,10 +29,19 @@ jobs:
           ! -path "./README.md" \
           ! -path "./.github/*" | while read -r file; do
             raw_path="${file#./}"
+            raw_url="${REPO}/${raw_path}"
+            
             echo "## ${raw_path}" >> README.md
             echo "" >> README.md
-            echo "[${raw_path}](${REPO}/${raw_path})" >> README.md
+            echo "[${raw_path}](${raw_url})" >> README.md
             echo "" >> README.md
+
+            if [[ "${raw_path}" == *.sh ]]; then
+              echo '```bash' >> README.md
+              echo "bash <(curl -s ${raw_url})" >> README.md
+              echo '```' >> README.md
+              echo "" >> README.md
+            fi
           done
 
     - name: Commit and push changes
@@ -34,5 +49,5 @@ jobs:
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git add README.md
-        git commit -m "Update README with raw links" || echo "No changes to commit"
+        git commit -m "Update README with raw links and run commands" || echo "No changes to commit"
         git push
